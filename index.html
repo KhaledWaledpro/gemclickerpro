@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gem Clicker Pro</title>
+    <script src="https://integration.gamepix.com/sdk/v3/gamepix.sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+	.reward-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: gold;
+  border: none;
+  border-radius: 10px;
+  color: black;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .title {
+            font-size: clamp(1.2em, 4vw, 2.5em);
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: clamp(0.7em, 2vw, 0.9em);
+            opacity: 0.8;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: clamp(1em, 3vw, 1.5em);
+            font-weight: bold;
+        }
+
+        .gem-container {
+            margin: 15px 0;
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .gem {
+            width: clamp(120px, 20vw, 200px);
+            height: clamp(120px, 20vw, 200px);
+            margin: 0 auto;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffc93c);
+            background-size: 300% 300%;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            animation: gemShine 3s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(2em, 8vw, 4em);
+            user-select: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .gem:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .gem:active {
+            transform: scale(0.95);
+        }
+
+        .gem.clicked {
+            animation: gemClick 0.3s ease;
+        }
+
+        @keyframes gemShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes gemClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(5deg); }
+            100% { transform: scale(1); }
+        }
+
+        .click-effect {
+            position: absolute;
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.5em;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        .upgrades-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: clamp(0.8em, 2vw, 1em);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: left;
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .upgrade-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upgrade-title {
+            font-weight: bold;
+            font-size: clamp(0.9em, 2.5vw, 1.1em);
+            margin-bottom: 3px;
+        }
+
+        .upgrade-desc {
+            font-size: clamp(0.7em, 2vw, 0.9em);
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-cost {
+            font-size: clamp(0.7em, 2vw, 0.9em);
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .ad-info {
+            color: #fff;
+            margin-top: 8px;
+            font-size: clamp(0.7em, 2vw, 0.9em);
+            opacity: 0.8;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .combo-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: clamp(0.8em, 2vw, 1em);
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .combo-indicator.active {
+            transform: scale(1);
+        }
+
+        /* Responsive adjustments for iframe */
+        @media (max-width: 800px) or (max-height: 450px) {
+            .game-container {
+                padding: 10px;
+                border-radius: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+                margin-bottom: 10px;
+            }
+            
+            .stat-box {
+                padding: 5px;
+            }
+            
+            .gem-container {
+                margin: 10px 0;
+            }
+            
+            .upgrades-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5px;
+                margin: 10px 0;
+            }
+            
+            .upgrade-btn {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Specific optimizations for 800x450 iframe */
+        @media (width: 800px) and (height: 450px) {
+            .title {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+            
+            .gem {
+                width: 140px;
+                height: 140px;
+                font-size: 3em;
+            }
+            
+            .stats-container {
+                margin-bottom: 8px;
+            }
+            
+            .gem-container {
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Game Container -->
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <h1 class="title">💎 Gem Clicker Pro 💎</h1>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Gems</div>
+                <div class="stat-value" id="gemsCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Click Power</div>
+                <div class="stat-value" id="clickPower">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Total Clicks</div>
+                <div class="stat-value" id="totalClicks">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="playerLevel">1</div>
+            </div>
+        </div>
+
+        <!-- Combo Indicator -->
+        <div class="combo-indicator" id="comboIndicator">
+            Combo x<span id="comboMultiplier">1</span>
+        </div>
+
+        <div class="gem-container">
+            <div class="gem" id="mainGem">💎</div>
+        </div>
+
+        <!-- Progress to next ad -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="adProgress"></div>
+        </div>
+        <div class="ad-info">
+            Clicks until next ad: <span id="clicksToAd">30</span>/30
+        </div>
+
+        <div class="upgrades-container">
+            <button class="upgrade-btn" id="clickUpgrade">
+                <div class="upgrade-title">Power Click</div>
+                <div class="upgrade-desc">+1 gems per click</div>
+                <div class="upgrade-cost">Cost: <span id="clickUpgradeCost">10</span> gems</div>
+            </button>
+            
+            <button class="upgrade-btn" id="autoClicker">
+                <div class="upgrade-title">Auto Clicker</div>
+                <div class="upgrade-desc">+1 gem per second</div>
+                <div class="upgrade-cost">Cost: <span id="autoClickerCost">50</span> gems</div>
+            </button>
+            
+            <button class="upgrade-btn" id="luckyGem">
+                <div class="upgrade-title">Lucky Gem</div>
+                <div class="upgrade-desc">2x gems for 30 seconds</div>
+                <div class="upgrade-cost">Cost: <span id="luckyGemCost">100</span> gems</div>
+            </button>
+            <button id="watchAdBtn" class="reward-button">🎁 show ad 100</button>
+
+            <button class="upgrade-btn" id="comboBoost">
+                <div class="upgrade-title">Combo Master</div>
+                <div class="upgrade-desc">Longer combo duration</div>
+                <div class="upgrade-cost">Cost: <span id="comboCost">200</span> gems</div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Prevent unwanted page scrolling
+        window.addEventListener("keydown", (event) => {
+            if (["ArrowUp", "ArrowDown", " "].includes(event.key)) {
+                event.preventDefault();
+            }
+        });
+        window.addEventListener("wheel", (event) => event.preventDefault(), {
+            passive: false,
+        });
+
+        // Game State
+        let gameState = {
+            gems: 0,
+            clickPower: 1,
+            totalClicks: 0,
+            clicksToAd: 30,
+            playerLevel: 1,
+            autoClickerLevel: 0,
+            clickUpgradeLevel: 0,
+            luckyGemActive: false,
+            comboLevel: 0,
+            combo: 0,
+            comboTimer: null,
+            upgradeCosts: {
+                clickPower: 10,
+                autoClicker: 50,
+                luckyGem: 100,
+                combo: 200
+            }
+        };
+
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        const mainGem = document.getElementById('mainGem');
+        const gemsCount = document.getElementById('gemsCount');
+        const clickPower = document.getElementById('clickPower');
+        const totalClicks = document.getElementById('totalClicks');
+        const playerLevel = document.getElementById('playerLevel');
+        const clicksToAd = document.getElementById('clicksToAd');
+        const adProgress = document.getElementById('adProgress');
+        const comboIndicator = document.getElementById('comboIndicator');
+        const comboMultiplier = document.getElementById('comboMultiplier');
+
+        // Initialize GamePix SDK
+        function initializeGame() {
+            try {
+                // Set loading progress
+                GamePix.loading(50);
+                
+                // Load saved game state
+                loadGameState();
+                
+                // Handle iframe resizing
+                handleIframeResize();
+                
+                // Initialize game
+                setTimeout(() => {
+                    GamePix.loading(100);
+                    GamePix.loaded();
+                    
+                    // Hide loading screen and show game
+                    
+                    gameContainer.style.display = 'flex';
+                    
+                    // Start game loops
+                    startAutoClicker();
+                    updateDisplay();
+                    
+                    console.log('Gem Clicker Pro initialized successfully!');
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Failed to initialize GamePix SDK:', error);
+                // Fallback: show game anyway
+                setTimeout(() => {
+                    
+                    gameContainer.style.display = 'flex';
+                    handleIframeResize();
+                    startAutoClicker();
+                    updateDisplay();
+                }, 2000);
+            }
+        }
+	
+	function showRewardedAd() {
+    try {
+        GamePix.rewardAd().then(function (res) {
+            if (res.success) {
+                // ✅ reward
+                gameState.gems += 100;
+                showClickEffect(100, 100, '+100 Bonus!');
+                updateDisplay();
+                saveGameState();
+                console.log('Rewarded ad watched successfully');
+            } else {
+                console.log('Rewarded ad not available or not watched');
+            }
+        });
+    } catch (error) {
+        console.log('Could not show rewarded ad:', error);
+    }
+}
+
+
+
+        // Handle iframe resizing
+        function handleIframeResize() {
+            function resizeGame() {
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                // Adjust game container to fit iframe
+                document.documentElement.style.setProperty('--viewport-width', windowWidth + 'px');
+                document.documentElement.style.setProperty('--viewport-height', windowHeight + 'px');
+                
+                // Special handling for 800x450 iframe
+                if (windowWidth === 800 && windowHeight === 450) {
+                    document.body.classList.add('iframe-800x450');
+                } else {
+                    document.body.classList.remove('iframe-800x450');
+                }
+                
+                console.log(`Game resized to: ${windowWidth}x${windowHeight}`);
+            }
+            
+            // Initial resize
+            resizeGame();
+            
+            // Listen for resize events
+            window.addEventListener('resize', resizeGame);
+            
+            // Also listen for orientation change on mobile
+            window.addEventListener('orientationchange', () => {
+                setTimeout(resizeGame, 100);
+            });
+        }
+
+        // Load game state from GamePix localStorage
+        function loadGameState() {
+            try {
+                const savedGems = GamePix.localStorage.getItem('gems');
+                const savedClickPower = GamePix.localStorage.getItem('clickPower');
+                const savedTotalClicks = GamePix.localStorage.getItem('totalClicks');
+                const savedLevel = GamePix.localStorage.getItem('playerLevel');
+                const savedAutoClicker = GamePix.localStorage.getItem('autoClickerLevel');
+                const savedClickUpgrade = GamePix.localStorage.getItem('clickUpgradeLevel');
+                const savedComboLevel = GamePix.localStorage.getItem('comboLevel');
+                
+                if (savedGems) gameState.gems = parseInt(savedGems);
+                if (savedClickPower) gameState.clickPower = parseInt(savedClickPower);
+                if (savedTotalClicks) gameState.totalClicks = parseInt(savedTotalClicks);
+                if (savedLevel) gameState.playerLevel = parseInt(savedLevel);
+                if (savedAutoClicker) gameState.autoClickerLevel = parseInt(savedAutoClicker);
+                if (savedClickUpgrade) gameState.clickUpgradeLevel = parseInt(savedClickUpgrade);
+                if (savedComboLevel) gameState.comboLevel = parseInt(savedComboLevel);
+                
+            } catch (error) {
+                console.log('Could not load saved game state:', error);
+            }
+        }
+
+        // Save game state to GamePix localStorage
+        function saveGameState() {
+            try {
+                GamePix.localStorage.setItem('gems', gameState.gems.toString());
+                GamePix.localStorage.setItem('clickPower', gameState.clickPower.toString());
+                GamePix.localStorage.setItem('totalClicks', gameState.totalClicks.toString());
+                GamePix.localStorage.setItem('playerLevel', gameState.playerLevel.toString());
+                GamePix.localStorage.setItem('autoClickerLevel', gameState.autoClickerLevel.toString());
+                GamePix.localStorage.setItem('clickUpgradeLevel', gameState.clickUpgradeLevel.toString());
+                GamePix.localStorage.setItem('comboLevel', gameState.comboLevel.toString());
+            } catch (error) {
+                console.log('Could not save game state:', error);
+            }
+        }
+
+        // Main gem click handler
+        function clickGem(event) {
+            const rect = mainGem.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Calculate gems earned
+            let gemsEarned = gameState.clickPower;
+            
+            // Apply combo multiplier
+            if (gameState.combo > 0) {
+                const comboMultiplierValue = Math.min(1 + (gameState.combo * 0.1), 3);
+                gemsEarned = Math.floor(gemsEarned * comboMultiplierValue);
+                comboMultiplier.textContent = comboMultiplierValue.toFixed(1);
+            }
+            
+            // Apply lucky gem bonus
+            if (gameState.luckyGemActive) {
+                gemsEarned *= 2;
+            }
+            
+            // Update game state
+            gameState.gems += gemsEarned;
+            gameState.totalClicks++;
+            gameState.clicksToAd--;
+            
+            // Update combo
+            updateCombo();
+            
+            // Visual effects
+            mainGem.classList.add('clicked');
+            setTimeout(() => mainGem.classList.remove('clicked'), 300);
+            
+            // Show click effect
+            showClickEffect(x, y, `+${gemsEarned}`);
+            
+            // Check for ad
+            if (gameState.clicksToAd <= 0) {
+                showInterstitialAd();
+                gameState.clicksToAd = 30;
+            }
+            
+            // Check for level up
+            checkLevelUp();
+            
+            // Update display and save
+            updateDisplay();
+            saveGameState();
+            
+            // Update GamePix score
+            try {
+                GamePix.updateScore(gameState.gems);
+            } catch (error) {
+                console.log('Could not update GamePix score:', error);
+            }
+        }
+
+        // Update combo system
+        function updateCombo() {
+            gameState.combo++;
+            
+            // Show combo indicator
+            if (gameState.combo > 1) {
+                comboIndicator.classList.add('active');
+            }
+            
+            // Reset combo timer
+            if (gameState.comboTimer) {
+                clearTimeout(gameState.comboTimer);
+            }
+            
+            const comboDuration = 2000 + (gameState.comboLevel * 500); // Base 2s + upgrades
+            gameState.comboTimer = setTimeout(() => {
+                gameState.combo = 0;
+                comboIndicator.classList.remove('active');
+                comboMultiplier.textContent = '1';
+            }, comboDuration);
+        }
+
+        // Show click effect animation
+        function showClickEffect(x, y, text) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.textContent = text;
+            effect.style.left = x + 'px';
+            effect.style.top = y + 'px';
+            
+            mainGem.parentElement.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 1000);
+        }
+
+        // Check for level up
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.totalClicks / 50) + 1;
+            if (newLevel > gameState.playerLevel) {
+                gameState.playerLevel = newLevel;
+                try {
+                    GamePix.updateLevel(gameState.playerLevel);
+                    GamePix.happyMoment();
+                } catch (error) {
+                    console.log('Could not update GamePix level:', error);
+                }
+                showClickEffect(100, 50, 'LEVEL UP!');
+            }
+        }
+
+        // Show interstitial ad
+        function showInterstitialAd() {
+            try {
+                GamePix.interstitialAd().then(function (res) {
+                    if (res.success) {
+                        // Give bonus gems for watching ad
+                        gameState.gems += 50;
+                        showClickEffect(100, 100, '+50 Bonus!');
+                        updateDisplay();
+                        saveGameState();
+                        console.log('Interstitial ad watched successfully');
+                    } else {
+                        console.log('Interstitial ad not available or not watched');
+                    }
+                });
+            } catch (error) {
+                console.log('Could not show interstitial ad:', error);
+                
+                // TESTING MODE: Simulate ad for development
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.log('🧪 TESTING MODE: Simulating ad...');
+                    setTimeout(() => {
+                        // Simulate successful ad watch
+                        gameState.gems += 50;
+                        showClickEffect(100, 100, '+50 Test Bonus!');
+                        updateDisplay();
+                        saveGameState();
+                        alert('🧪 TEST MODE: Ad simulated! +50 gems bonus');
+                    }, 1000);
+                }
+            }
+        }
+
+        // Upgrade handlers
+        function buyClickUpgrade() {
+            if (gameState.gems >= gameState.upgradeCosts.clickPower) {
+                gameState.gems -= gameState.upgradeCosts.clickPower;
+                gameState.clickPower++;
+                gameState.clickUpgradeLevel++;
+                gameState.upgradeCosts.clickPower = Math.floor(gameState.upgradeCosts.clickPower * 1.5);
+                
+                try {
+                    GamePix.happyMoment();
+                } catch (error) {
+                    console.log('Could not trigger happy moment:', error);
+                }
+                
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function buyAutoClicker() {
+            if (gameState.gems >= gameState.upgradeCosts.autoClicker) {
+                gameState.gems -= gameState.upgradeCosts.autoClicker;
+                gameState.autoClickerLevel++;
+                gameState.upgradeCosts.autoClicker = Math.floor(gameState.upgradeCosts.autoClicker * 2);
+                
+                try {
+                    GamePix.happyMoment();
+                } catch (error) {
+                    console.log('Could not trigger happy moment:', error);
+                }
+                
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function buyLuckyGem() {
+            if (gameState.gems >= gameState.upgradeCosts.luckyGem && !gameState.luckyGemActive) {
+                gameState.gems -= gameState.upgradeCosts.luckyGem;
+                gameState.luckyGemActive = true;
+                gameState.upgradeCosts.luckyGem = Math.floor(gameState.upgradeCosts.luckyGem * 1.8);
+                
+                // Activate lucky gem for 30 seconds
+                mainGem.style.filter = 'hue-rotate(60deg) brightness(1.3)';
+                
+                setTimeout(() => {
+                    gameState.luckyGemActive = false;
+                    mainGem.style.filter = '';
+                    updateDisplay();
+                }, 30000);
+                
+                try {
+                    GamePix.happyMoment();
+                } catch (error) {
+                    console.log('Could not trigger happy moment:', error);
+                }
+                
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function buyComboBoost() {
+            if (gameState.gems >= gameState.upgradeCosts.combo) {
+                gameState.gems -= gameState.upgradeCosts.combo;
+                gameState.comboLevel++;
+                gameState.upgradeCosts.combo = Math.floor(gameState.upgradeCosts.combo * 2.5);
+                
+                try {
+                    GamePix.happyMoment();
+                } catch (error) {
+                    console.log('Could not trigger happy moment:', error);
+                }
+                
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        // Auto clicker system
+        function startAutoClicker() {
+            setInterval(() => {
+                if (gameState.autoClickerLevel > 0) {
+                    gameState.gems += gameState.autoClickerLevel;
+                    updateDisplay();
+                    saveGameState();
+                    
+                    // Update GamePix score periodically
+                    try {
+                        GamePix.updateScore(gameState.gems);
+                    } catch (error) {
+                        console.log('Could not update GamePix score:', error);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Update display
+        function updateDisplay() {
+            gemsCount.textContent = gameState.gems.toLocaleString();
+            clickPower.textContent = gameState.clickPower;
+            totalClicks.textContent = gameState.totalClicks.toLocaleString();
+            playerLevel.textContent = gameState.playerLevel;
+            clicksToAd.textContent = gameState.clicksToAd;
+            
+            // Update progress bar
+            const progress = ((30 - gameState.clicksToAd) / 30) * 100;
+            adProgress.style.width = progress + '%';
+            
+            // Update upgrade costs and availability
+            document.getElementById('clickUpgradeCost').textContent = gameState.upgradeCosts.clickPower;
+            document.getElementById('autoClickerCost').textContent = gameState.upgradeCosts.autoClicker;
+            document.getElementById('luckyGemCost').textContent = gameState.upgradeCosts.luckyGem;
+            document.getElementById('comboCost').textContent = gameState.upgradeCosts.combo;
+            
+            // Enable/disable upgrade buttons
+            document.getElementById('clickUpgrade').disabled = gameState.gems < gameState.upgradeCosts.clickPower;
+            document.getElementById('autoClicker').disabled = gameState.gems < gameState.upgradeCosts.autoClicker;
+            document.getElementById('luckyGem').disabled = gameState.gems < gameState.upgradeCosts.luckyGem || gameState.luckyGemActive;
+            document.getElementById('comboBoost').disabled = gameState.gems < gameState.upgradeCosts.combo;
+        }
+
+        // Event listeners
+        mainGem.addEventListener('click', clickGem);
+        document.getElementById('clickUpgrade').addEventListener('click', buyClickUpgrade);
+        document.getElementById('autoClicker').addEventListener('click', buyAutoClicker);
+        document.getElementById('luckyGem').addEventListener('click', buyLuckyGem);
+        document.getElementById('comboBoost').addEventListener('click', buyComboBoost);
+	document.getElementById('watchAdBtn').addEventListener('click', showRewardedAd);
+
+        // Initialize game when page loads
+        window.addEventListener('load', initializeGame);
+        
+        // Save game periodically
+        setInterval(saveGameState, 10000); // Save every 10 seconds
+    </script>
+</body>
+</html>
